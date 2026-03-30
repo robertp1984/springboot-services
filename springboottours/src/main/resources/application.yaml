@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: springboottours
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres?ssl=true&sslmode=verify-full&sslrootcert=./springboottours/src/main/resources/ca.crt
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    rest:
+      base-path: "/api/v1/datarest/"
+  ssl:
+    bundle:
+      jks:
+        server:
+          key:
+            alias: "springboottours"
+          keystore:
+            location: "classpath:keystore.p12"
+            password: "password"
+            type: "PKCS12"
+        client:
+          truststore:
+            location: "classpath:truststore.p12"
+            password: "password"
+            type: "PKCS12"
+
+server:
+  port: 8080
+  ssl:
+    bundle: server
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info,health,metrics,cache,prometheus
+  endpoint:
+    health:
+      show-details: always
+  info:
+    java:
+      enabled: true
+    env:
+      enabled: true
+
+info:
+  name: '@project.name@'
+  description: '@project.description@'
+  version: '@project.version@'

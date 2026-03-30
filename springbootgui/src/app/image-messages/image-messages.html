@@ -1,0 +1,4 @@
+
+@for(dataItem of dataItemListObservable | async; track dataItem.id) {
+    <app-image-message [dataItem]="dataItem" (onDelete)="onDeleteImageMessage($event)"></app-image-message>
+  }

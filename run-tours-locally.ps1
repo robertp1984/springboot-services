@@ -1,0 +1,1 @@
+java "-Djavax.net.ssl.keyStore=$PWD\springboottours\src\main\resources\keystore.p12" "-Djavax.net.ssl.keyStorePassword=password" "-Djavax.net.ssl.trustStore=$PWD\springboottours\src\main\resources\truststore.p12" "-Djavax.net.ssl.trustStorePassword=password"  -jar springboottours/target/springboottours-1.0.0-SNAPSHOT.jar

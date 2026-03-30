@@ -1,0 +1,162 @@
+name: springboot
+
+networks:
+  backend-network:
+    driver: bridge
+
+services:
+  postgresql:
+    image: springboot-postgres:18.0
+    restart: on-failure
+    build:
+      context: ./docker/postgresql
+      dockerfile: Dockerfile
+      tags:
+        - "springboot-postgres:18.0"
+    volumes:
+      - ./data/postgresql:/var/lib/postgresql/18/docker
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+      - POSTGRES_HOST_AUTH_METHOD=scram-sha-256
+    hostname: postgresql
+    ports:
+      - "5432:5432"
+    networks:
+      - backend-network
+
+  springboottours:
+    image: springboottours
+    build:
+      context: ./springboottours/
+      dockerfile: Dockerfile
+      tags:
+        - "springboottours:1.0.0"
+    restart: on-failure
+    depends_on:
+      - postgresql
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/postgres?ssl=true&sslmode=verify-full&sslrootcert=./ca.crt
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    ports:
+      - "8080:8080"
+    networks:
+      - backend-network
+
+  mongo:
+    image: mongo:8.0.15
+    restart: on-failure
+    volumes:
+      - ./data/mongo:/data/db
+      - ./docker/mongo/config:/etc/mongo:ro
+    environment:
+      - MONGO_INITDB_DATABASE=images
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    hostname: mongo
+    ports:
+      - "27017:27017"
+    command:
+      - --tlsMode
+      - requireTLS
+      - --tlsCertificateKeyFile
+      - /etc/mongo/mongodb.pem
+      - --tlsCAFile
+      - /etc/mongo/ca.crt
+      - --tlsAllowConnectionsWithoutCertificates
+    networks:
+      - backend-network
+
+  rabbitmq:
+    image: rabbitmq:4.2.0-management
+    restart: on-failure
+    volumes:
+      - ./docker/rabbitmq:/etc/rabbitmq:ro
+      - ./data/rabbitmq:/var/lib/rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_PASS=secret
+      - RABBITMQ_DEFAULT_USER=myuser
+    hostname: rabbitmq
+    ports:
+      - "5671:5671"
+      - "15671:15671"
+      - "15691:15691"
+    networks:
+      - backend-network
+
+  springbootimages:
+    image: springbootimages
+    build:
+      context: ./springbootimages/
+      dockerfile: Dockerfile
+      tags:
+        - "springbootimages:1.0.0"
+    restart: on-failure
+    depends_on:
+      - mongo
+      - rabbitmq
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://root:password@mongo:27017/?tls=true
+      - SPRING_DATA_MONGODB_DATABASE=images
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=myuser
+      - SPRING_RABBITMQ_PASSWORD=secret
+      - AWS_BEARER_TOKEN_BEDROCK=__OBFUSCATED__
+    ports:
+      - "8081:8081"
+    networks:
+      - backend-network
+
+  springbootmqreceiver:
+    image: springbootmqreceiver
+    build:
+      context: ./springbootmqreceiver/
+      dockerfile: Dockerfile
+      tags:
+        - "springbootmqreceiver:1.0.0"
+    restart: on-failure
+    depends_on:
+      - mongo
+      - rabbitmq
+    environment:
+      - APP_MONGODB_URI=mongodb://root:password@mongo:27017/?tls=true
+      - APP_MONGODB_DATABASE=mqevents
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=myuser
+      - SPRING_RABBITMQ_PASSWORD=secret
+    ports:
+      - "8082:8082"
+    networks:
+      - backend-network
+
+  prometheus:
+    image: prom/prometheus:v3.7.3
+    restart: on-failure
+    volumes:
+      - ./docker/prometheus/:/etc/prometheus/:ro
+      - ./data/prometheus:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.config.file=/etc/prometheus/web.yml"
+    networks:
+      - backend-network
+
+  grafana:
+    image: grafana/grafana:12.1
+    restart: on-failure
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=secret
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+    networks:
+      - backend-network

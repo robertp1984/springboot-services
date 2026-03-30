@@ -1,0 +1,8 @@
+  <div class="imageMessage">
+    <div class="icon"><i [ngClass]="getOriginalFilenameClass()" ></i></div>
+    <div class="text">ID: {{dataItem().id}}</div>
+    <div class="text">{{dataItem().originalFilename}}</div>
+    <div class="text">{{dataItem().contentType}}</div>
+    <div class="text">{{dataItem().createdTime | date:'longDate' }}</div> 
+    <button (click)="deleteImageMessage()" class="btn btn-danger">Delete</button>
+  </div>

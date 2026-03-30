@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: springbootmqreceiver
+  rabbitmq:
+    host: localhost
+    port: 5671
+    username: myuser
+    password: secret
+    ssl:
+      enabled: true
+  mongodb:
+    uri: mongodb://root:password@localhost:27017/?tls=true
+    database: events
+  data:
+    rest:
+      base-path: "/api/v1/datarest/"
+  ssl:
+    bundle:
+      jks:
+        server:
+          key:
+            alias: "springbootmqreceiver"
+          keystore:
+            location: "classpath:keystore.p12"
+            password: "password"
+            type: "PKCS12"
+        client:
+          truststore:
+            location: "classpath:truststore.p12"
+            password: "password"
+            type: "PKCS12"
+
+
+server:
+  port: 8082
+  ssl:
+    bundle: server
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info,health,metrics,cache,prometheus
+  endpoint:
+    health:
+      show-details: always
+  info:
+    java:
+      enabled: true
+    env:
+      enabled: true
+
+info:
+  name: '@project.name@'
+  description: '@project.description@'
+  version: '@project.version@'
+
+app:
+  cors:
+    allowedOrigins: "http://localhost:4200"

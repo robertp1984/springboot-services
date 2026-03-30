@@ -1,0 +1,1 @@
+java "-Djavax.net.ssl.keyStore=$PWD\springbootmqreceiver\src\main\resources\keystore.p12" "-Djavax.net.ssl.keyStorePassword=password" "-Djavax.net.ssl.trustStore=$PWD\springbootmqreceiver\src\main\resources\truststore.p12" "-Djavax.net.ssl.trustStorePassword=password"  -jar springbootmqreceiver\target\springbootmqreceiver-1.0.0-SNAPSHOT.jar

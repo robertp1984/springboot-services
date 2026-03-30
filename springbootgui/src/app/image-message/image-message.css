@@ -1,0 +1,22 @@
+.imageMessage {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+.imageMessage .text {
+  font-size: 1em;
+  margin: 5px 0;
+}
+
+.imageMessage .date {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.imageMessage .icon {
+  font-size: 4em;
+  margin-bottom: 10px;
+  color: #8800ff;
+}

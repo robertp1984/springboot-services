@@ -1,0 +1,50 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets: [ 'localhost:9090' ]
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/ca.crt
+    basic_auth:
+      username: admin
+      password_file: /etc/prometheus/passwordfiles/prometheus.txt
+
+  - job_name: 'springboottours'
+    scrape_interval: 15s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: [ 'springboottours:8080' ]
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/ca.crt
+
+  - job_name: 'springbootimages'
+    scrape_interval: 15s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: [ 'springbootimages:8081' ]
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/ca.crt
+
+  - job_name: 'springbootmqreceiver'
+    scrape_interval: 15s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: [ 'springbootmqreceiver:8082' ]
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/ca.crt
+
+  - job_name: 'rabbitmq'
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: [ 'rabbitmq:15691' ]
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/ca.crt
