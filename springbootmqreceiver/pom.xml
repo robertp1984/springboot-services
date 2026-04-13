@@ -162,4 +162,12 @@
         </plugins>
     </build>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/robertp1984/springboot-services</url>
+        </repository>
+    </distributionManagement>
+
 </project>
