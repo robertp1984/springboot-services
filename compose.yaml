@@ -14,7 +14,7 @@ services:
       tags:
         - "springboot-postgres:18.0"
     volumes:
-      - ./data/postgresql:/var/lib/postgresql/18/docker
+      - data-postgresql:/var/lib/postgresql/18/docker
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -49,7 +49,7 @@ services:
     image: mongo:8.0.15
     restart: on-failure
     volumes:
-      - ./data/mongo:/data/db
+      - data-mongo:/data/db
       - ./docker/mongo/config:/etc/mongo:ro
     environment:
       - MONGO_INITDB_DATABASE=images
@@ -74,7 +74,7 @@ services:
     restart: on-failure
     volumes:
       - ./docker/rabbitmq:/etc/rabbitmq:ro
-      - ./data/rabbitmq:/var/lib/rabbitmq
+      - data-rabbitmq:/var/lib/rabbitmq
     environment:
       - RABBITMQ_DEFAULT_PASS=secret
       - RABBITMQ_DEFAULT_USER=myuser
@@ -103,7 +103,7 @@ services:
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_USERNAME=myuser
       - SPRING_RABBITMQ_PASSWORD=secret
-      - AWS_BEARER_TOKEN_BEDROCK=__OBFUSCATED__
+      - AWS_BEARER_TOKEN_BEDROCK=${AWS_BEARER_TOKEN_BEDROCK}
     ports:
       - "8081:8081"
     networks:
@@ -136,7 +136,7 @@ services:
     restart: on-failure
     volumes:
       - ./docker/prometheus/:/etc/prometheus/:ro
-      - ./data/prometheus:/prometheus
+      - data-prometheus:/prometheus
     ports:
       - "9090:9090"
     command:
@@ -149,7 +149,7 @@ services:
     image: grafana/grafana:12.1
     restart: on-failure
     volumes:
-      - ./data/grafana:/var/lib/grafana
+      - data-grafana:/var/lib/grafana
     ports:
       - "3000:3000"
     environment:
@@ -160,3 +160,10 @@ services:
       - prometheus
     networks:
       - backend-network
+
+volumes:
+  data-postgresql:
+  data-mongo:
+  data-rabbitmq:
+  data-prometheus:
+  data-grafana:
