@@ -18,6 +18,7 @@
     <properties>
         <java.version>25</java.version>
         <springdoc.openapi.version>3.0.1</springdoc.openapi.version>
+        <flyway.version>11.20.3</flyway.version>
     </properties>
     <dependencies>
         <dependency>
@@ -109,14 +110,13 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-            <version>11.20.3</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
-            <version>11.20.3</version>
+            <version>${flyway.version}</version>
         </dependency>
 
         <dependency>

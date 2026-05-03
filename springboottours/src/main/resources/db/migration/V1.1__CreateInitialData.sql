@@ -20,7 +20,6 @@ $$ LANGUAGE plpgsql;
 BEGIN;
 
 -- Initial data for tour package
-SELECT add_tour_package(
 SELECT add_tour_package('BC', 'Backpack Cal');
 SELECT add_tour_package('CC', 'California Calm');
 SELECT add_tour_package('CH', 'California Hot springs');
