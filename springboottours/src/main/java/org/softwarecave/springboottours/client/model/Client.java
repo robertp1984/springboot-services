@@ -9,15 +9,15 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "client")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Client {
@@ -25,21 +25,17 @@ public class Client {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "client_seq")
     @SequenceGenerator(name = "client_seq", sequenceName = "client_seq", allocationSize = 1)
     @Column(name = "id")
-    @EqualsAndHashCode.Exclude
     private Long id;
 
     @Column(name = "first_name")
-    @NotNull
     @NotBlank
     private String firstName;
 
     @Column(name = "last_name")
-    @NotNull
     @NotBlank
     private String lastName;
 
     @Column(name = "email")
-    @NotNull
     @NotBlank
     @Email
     private String email;

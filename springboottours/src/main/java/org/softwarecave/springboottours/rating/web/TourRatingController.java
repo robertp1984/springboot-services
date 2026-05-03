@@ -1,10 +1,11 @@
 package org.softwarecave.springboottours.rating.web;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.softwarecave.springboottours.rating.model.TourRating;
 import org.softwarecave.springboottours.rating.service.TourRatingService;
 import org.softwarecave.springboottours.rating.web.converter.TourRatingDTOConverter;
-import org.softwarecave.springboottours.rating.model.TourRating;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,27 +21,26 @@ import java.util.List;
 @RestController
 @RequestMapping(path = "/api/v1/tours/{tourId}/ratings")
 @Slf4j
+@RequiredArgsConstructor
 public class TourRatingController {
     private final TourRatingService tourRatingService;
+    private final TourRatingDTOConverter tourRatingDTOConverter;
 
-    public TourRatingController(TourRatingService tourRatingService) {
-        this.tourRatingService = tourRatingService;
-    }
 
-    @PostMapping(value = "/",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    public TourRatingDTO addTourRating(@RequestBody @Valid TourRatingDTO tourRatingDTO,
-                                        @PathVariable("tourId") Long tourId) {
+    public TourRatingDTO addTourRating(@PathVariable("tourId") Long tourId,
+                                       @RequestBody @Valid TourRatingDTO tourRatingDTO) {
         log.info("Called addTourRating for tourId={} with {}", tourId, tourRatingDTO);
         TourRating added = tourRatingService.addTourRating(tourId, tourRatingDTO);
-        return new TourRatingDTOConverter().convertToDTO(added);
+        return tourRatingDTOConverter.convertToDTO(added);
     }
 
-    @GetMapping(value = "/",
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<TourRatingDTO> getTourRatings(@PathVariable("tourId") Long tourId) {
-        return tourRatingService.findByTourId(tourId);
+        var tourRatings = tourRatingService.findByTourId(tourId);
+        return tourRatings.stream().map(tourRatingDTOConverter::convertToDTO).toList();
+
     }
 }

@@ -2,6 +2,7 @@ package org.softwarecave.springboottours.rating.model.validation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
+import jakarta.validation.ReportAsSingleViolation;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
@@ -17,8 +18,9 @@ import java.lang.annotation.Target;
 @Documented
 @Min(0)
 @Max(10)
+@ReportAsSingleViolation
 public @interface TourRatingValue {
-    String message() default "Invalid tour rating value";
+    String message() default "{invalidTourRatingValue}";
 
     Class<?>[] groups() default {};
 

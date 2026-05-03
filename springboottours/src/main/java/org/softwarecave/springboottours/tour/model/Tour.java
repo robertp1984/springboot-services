@@ -14,13 +14,13 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.Setter;
 
 @Entity
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "tour")
@@ -29,21 +29,17 @@ public class Tour {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "tour_seq")
     @SequenceGenerator(name = "tour_seq", sequenceName = "tour_seq", allocationSize = 1)
     @Column(name = "id")
-    @EqualsAndHashCode.Exclude
     private Long id;
 
     @Column(name = "code")
-    @NotNull
     @NotBlank
     private String code;
 
     @Column(name = "name")
-    @NotNull
     @NotBlank
     private String name;
 
     @Column(name = "description")
-    @NotNull
     @NotBlank
     private String description;
 
@@ -59,8 +55,6 @@ public class Tour {
 
     @ManyToOne
     @JoinColumn(name = "tour_package_id")
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     @NotNull
     private TourPackage tourPackage;
 }
