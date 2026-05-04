@@ -1,7 +1,5 @@
 package org.softwarecave.springbootimages.messaging;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -10,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -30,7 +29,7 @@ public class QueueSenderTest {
     private RabbitTemplate rabbitTemplate;
 
     @Mock
-    private ObjectMapper objectMapper;
+    private JsonMapper jsonMapper;
 
     @InjectMocks
     private QueueSender queueSender;
@@ -38,24 +37,22 @@ public class QueueSenderTest {
     @Test
     void publishImagesSavedMessage_withValidMessage_sendsJsonMessageToExchange() throws Exception {
         ImageMessage msg = new ImageMessage("id-1", "file.png", "image/png", Instant.now());
-        when(objectMapper.writeValueAsString(msg)).thenReturn("{\"id\":\"id-1\"}");
+        when(jsonMapper.writeValueAsString(msg)).thenReturn("{\"id\":\"id-1\"}");
 
         queueSender.publishImagesSavedMessage(msg);
 
-        ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
-        verify(rabbitTemplate, times(1)).send(anyString(), anyString(), captor.capture());
-        Message sent = captor.getValue();
-        String body = new String(sent.getBody(), StandardCharsets.UTF_8);
-        assertEquals("{\"id\":\"id-1\"}", body);
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(rabbitTemplate, times(1)).convertAndSend(anyString(), anyString(), captor.capture());
+        String sent = captor.getValue();
+        assertEquals("{\"id\":\"id-1\"}", sent);
     }
 
     @Test
-    void publishImagesSavedMessage_objectMapperThrows_propagatesJsonProcessingExceptionAndDoesNotSend() throws Exception {
+    void publishImagesSavedMessage_jsonMapperThrows_propagatesRuntimeExceptionAndDoesNotSend() {
         ImageMessage msg = new ImageMessage("id-2", "file2.png", "image/png", Instant.now());
-        when(objectMapper.writeValueAsString(any())).thenThrow(new JsonProcessingException("fail") {
-        });
+        when(jsonMapper.writeValueAsString(any())).thenThrow(new RuntimeException("fail"));
 
-        assertThrows(JsonProcessingException.class, () -> queueSender.publishImagesSavedMessage(msg));
+        assertThrows(RuntimeException.class, () -> queueSender.publishImagesSavedMessage(msg));
         verify(rabbitTemplate, never()).send(anyString(), anyString(), any(Message.class));
     }
 
@@ -68,25 +65,23 @@ public class QueueSenderTest {
     @Test
     void publishImagesDeletedMessage_withValidMessage_sendsJsonMessageToExchange() throws Exception {
         ImageMessage msg = new ImageMessage("id-1", "file.png", "image/png", Instant.now());
-        when(objectMapper.writeValueAsString(msg)).thenReturn("{\"id\":\"id-1\"}");
+        when(jsonMapper.writeValueAsString(msg)).thenReturn("{\"id\":\"id-1\"}");
 
         queueSender.publishImagesDeletedMessage(msg);
 
-        ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
-        verify(rabbitTemplate, times(1)).send(anyString(), anyString(), captor.capture());
-        Message sent = captor.getValue();
-        String body = new String(sent.getBody(), StandardCharsets.UTF_8);
-        assertEquals("{\"id\":\"id-1\"}", body);
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(rabbitTemplate, times(1)).convertAndSend(anyString(), anyString(), captor.capture());
+        String sent = captor.getValue();
+        assertEquals("{\"id\":\"id-1\"}", sent);
     }
 
     @Test
-    void publishImagesDeletedMessage_objectMapperThrows_propagatesJsonProcessingExceptionAndDoesNotSend() throws Exception {
+    void publishImagesDeletedMessage_jsonMapperThrows_propagatesRuntimeExceptionAndDoesNotSend() throws Exception {
         ImageMessage msg = new ImageMessage("id-2", "file2.png", "image/png", Instant.now());
-        when(objectMapper.writeValueAsString(any())).thenThrow(new JsonProcessingException("fail") {
-        });
+        when(jsonMapper.writeValueAsString(any())).thenThrow(new RuntimeException("fail"));
 
-        assertThrows(JsonProcessingException.class, () -> queueSender.publishImagesDeletedMessage(msg));
-        verify(rabbitTemplate, never()).send(anyString(), anyString(), any(Message.class));
+        assertThrows(RuntimeException.class, () -> queueSender.publishImagesDeletedMessage(msg));
+        verify(rabbitTemplate, never()).convertAndSend(anyString(), anyString(), anyString());
     }
 
     @Test

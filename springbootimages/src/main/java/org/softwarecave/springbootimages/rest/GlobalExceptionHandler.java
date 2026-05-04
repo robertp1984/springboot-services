@@ -30,7 +30,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler({ImageGenerationException.class})
-    public ResponseEntity<Object> handleNoSuchImageException(ImageGenerationException ex, WebRequest request) {
+    public ResponseEntity<Object> handleImageGenerationException(ImageGenerationException ex, WebRequest request) {
 
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
         return createResponseEntity(pd, null, HttpStatus.INTERNAL_SERVER_ERROR, request);

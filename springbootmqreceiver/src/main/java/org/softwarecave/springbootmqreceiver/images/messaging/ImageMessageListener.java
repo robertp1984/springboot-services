@@ -1,17 +1,15 @@
 package org.softwarecave.springbootmqreceiver.images.messaging;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.softwarecave.springbootmqreceiver.images.config.MessagingConfig;
 import org.softwarecave.springbootmqreceiver.images.model.ActionType;
 import org.softwarecave.springbootmqreceiver.images.model.ImageMessage;
 import org.softwarecave.springbootmqreceiver.images.service.ImageMessageProcessor;
-import org.softwarecave.springbootmqreceiver.images.config.MessagingConfig;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.json.JsonMapper;
 
 @Component
 @Transactional
@@ -38,14 +36,13 @@ public class ImageMessageListener {
 
     private ImageMessage readImageMessage(String messageString, ActionType actionType) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.registerModule(new JavaTimeModule());
-            ImageMessage imageMessage = objectMapper.readValue(messageString, ImageMessage.class);
+            JsonMapper jsonMapper = new JsonMapper();
+            ImageMessage imageMessage = jsonMapper.readValue(messageString, ImageMessage.class);
             imageMessage.setActionType(actionType);
             return imageMessage;
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             log.error("Failed to read or process the received message: %s".formatted(e.getMessage()), e);
-            throw new IllegalArgumentException("Failed to read or process the received message", e);
+            throw new IllegalArgumentException("The image message must be valid JSON");
         }
     }
 }

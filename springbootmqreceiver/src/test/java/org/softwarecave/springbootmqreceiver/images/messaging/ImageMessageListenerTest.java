@@ -1,8 +1,5 @@
 package org.softwarecave.springbootmqreceiver.images.messaging;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -12,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.softwarecave.springbootmqreceiver.images.model.ActionType;
 import org.softwarecave.springbootmqreceiver.images.model.ImageMessage;
 import org.softwarecave.springbootmqreceiver.images.service.ImageMessageProcessor;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -53,11 +51,11 @@ public class ImageMessageListenerTest {
     }
 
     @Test
-    public void testReceiveSavedMessage_ValidAndComplete() throws JsonProcessingException {
+    public void testReceiveSavedMessage_ValidAndComplete() {
         // given
         ImageMessage sourceImageMessage = new ImageMessage(UUID.randomUUID().toString(),
                 FILENAME1, TEXT_PLAIN, INSTANT, ActionType.SAVE);
-        String sourceImageMessageJson = getObjectMapper().writeValueAsString(sourceImageMessage);
+        String sourceImageMessageJson = getJsonMapper().writeValueAsString(sourceImageMessage);
         doNothing().when(imageMessageProcessor).process(sourceImageMessage);
 
         // when
@@ -75,11 +73,11 @@ public class ImageMessageListenerTest {
     }
 
     @Test
-    public void testReceiveSavedMessage_ValidAndNotComplete() throws JsonProcessingException {
+    public void testReceiveSavedMessage_ValidAndNotComplete() {
         // given
         ImageMessage sourceImageMessage = new ImageMessage(UUID.randomUUID().toString(),
                 FILENAME1, TEXT_PLAIN, null, ActionType.SAVE);
-        String sourceImageMessageJson = getObjectMapper().writeValueAsString(sourceImageMessage);
+        String sourceImageMessageJson = getJsonMapper().writeValueAsString(sourceImageMessage);
         doNothing().when(imageMessageProcessor).process(sourceImageMessage);
 
         // when
@@ -97,11 +95,11 @@ public class ImageMessageListenerTest {
     }
 
     @Test
-    public void testReceiveDeletedMessage_ValidAndComplete() throws JsonProcessingException {
+    public void testReceiveDeletedMessage_ValidAndComplete() {
         // given
         ImageMessage sourceImageMessage = new ImageMessage(UUID.randomUUID().toString(),
                 FILENAME1, TEXT_PLAIN, INSTANT, ActionType.DELETE);
-        String sourceImageMessageJson = getObjectMapper().writeValueAsString(sourceImageMessage);
+        String sourceImageMessageJson = getJsonMapper().writeValueAsString(sourceImageMessage);
         doNothing().when(imageMessageProcessor).process(sourceImageMessage);
 
         // when
@@ -119,11 +117,11 @@ public class ImageMessageListenerTest {
     }
 
     @Test
-    public void testReceiveDeletedMessage_ValidAndNotComplete() throws JsonProcessingException {
+    public void testReceiveDeletedMessage_ValidAndNotComplete() {
         // given
         ImageMessage sourceImageMessage = new ImageMessage(UUID.randomUUID().toString(),
                 FILENAME1, TEXT_PLAIN, null, ActionType.DELETE);
-        String sourceImageMessageJson = getObjectMapper().writeValueAsString(sourceImageMessage);
+        String sourceImageMessageJson = getJsonMapper().writeValueAsString(sourceImageMessage);
         doNothing().when(imageMessageProcessor).process(sourceImageMessage);
 
         // when
@@ -140,9 +138,7 @@ public class ImageMessageListenerTest {
                 .hasFieldOrPropertyWithValue("actionType", ActionType.DELETE);
     }
 
-    private ObjectMapper getObjectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        return objectMapper;
+    private JsonMapper getJsonMapper() {
+        return new JsonMapper();
     }
 }

@@ -18,7 +18,6 @@ public class ImageBuilder {
         return this;
     }
 
-
     public ImageBuilder withContentType(String contentType) {
         image.setContentType(contentType);
         return this;

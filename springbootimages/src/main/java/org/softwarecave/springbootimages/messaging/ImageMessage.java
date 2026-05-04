@@ -1,8 +1,10 @@
 package org.softwarecave.springbootimages.messaging;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NonNull;
 
 import java.time.Instant;
 
@@ -10,10 +12,14 @@ import java.time.Instant;
 @AllArgsConstructor
 public class ImageMessage {
     private String id;
-    @NonNull
+
+    @NotBlank
     private String originalFilename;
-    @NonNull
+
+    @NotBlank
     private String contentType;
-    @NonNull
+
+    @NotNull
+    @PastOrPresent
     private Instant createdTime;
 }

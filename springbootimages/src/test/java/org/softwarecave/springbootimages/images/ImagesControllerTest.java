@@ -1,12 +1,15 @@
 package org.softwarecave.springbootimages.images;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.softwarecave.springbootimages.images.model.Image;
 import org.softwarecave.springbootimages.images.model.ImageBuilder;
 import org.softwarecave.springbootimages.images.model.NoSuchImageException;
 import org.softwarecave.springbootimages.images.service.ImageService;
 import org.softwarecave.springbootimages.images.web.ImagesController;
+import org.softwarecave.springbootimages.images.web.converter.GenerateImageParamsConverter;
+import org.softwarecave.springbootimages.images.web.converter.ImageDTOConverter;
 import org.softwarecave.springbootimages.utils.SHA512Calculator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -19,6 +22,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -43,14 +47,23 @@ public class ImagesControllerTest {
     @MockitoBean
     private ImageService imageService;
 
+    @MockitoBean(answers = Answers.CALLS_REAL_METHODS)
+    private ImageDTOConverter imageDTOConverter;
+
+    @MockitoBean
+    private GenerateImageParamsConverter generateImageParamsConverter;
+
     @Test
     public void testUploadImage_Valid() throws Exception {
-        doNothing().when(imageService).saveImage(any(Image.class));
+        // given
+        when(imageService.saveImage(any(Image.class))).thenAnswer(a -> a.getArgument(0));
 
-        mockMvc.perform(multipart("/api/v1/images/")
+        // when
+        mockMvc.perform(multipart("/api/v1/images")
                         .file(new MockMultipartFile("image", FILENAME1, CONTENT_TYPE, BYTES)))
                 .andExpect(status().isCreated());
 
+        // then
         ArgumentCaptor<Image> imageArgumentCaptor = ArgumentCaptor.forClass(Image.class);
         verify(imageService).saveImage(imageArgumentCaptor.capture());
         Image imageToSave = imageArgumentCaptor.getValue();
@@ -72,7 +85,7 @@ public class ImagesControllerTest {
                 .withBytes(BYTES)
                 .withCurrentDateTime()
                 .build();
-        when(imageService.getImage("5")).thenReturn(Optional.of(image));
+        when(imageService.getImage("5")).thenReturn(image);
 
         mockMvc.perform(get("/api/v1//images/5")
                         .accept(MediaType.APPLICATION_JSON))
@@ -86,9 +99,9 @@ public class ImagesControllerTest {
 
     @Test
     public void testGetImage_ImageDoesNotExists() throws Exception {
-        when(imageService.getImage("5")).thenReturn(Optional.empty());
+        when(imageService.getImage("5")).thenThrow(new NoSuchImageException(""));
 
-        mockMvc.perform(get("/api/v1//images/5")
+        mockMvc.perform(get("/api/v1/images/5")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
