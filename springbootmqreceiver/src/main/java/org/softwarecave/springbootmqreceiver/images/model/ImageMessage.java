@@ -1,5 +1,7 @@
 package org.softwarecave.springbootmqreceiver.images.model;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,8 +17,16 @@ import java.time.Instant;
 public class ImageMessage {
     @Id
     private String id;
+
+    @NotBlank
     private String originalFilename;
+
+    @NotBlank
     private String contentType;
+
+    @NotBlank
     private Instant createdTime;
+
+    @NotNull
     private ActionType actionType;
 }

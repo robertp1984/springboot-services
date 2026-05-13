@@ -1,6 +1,5 @@
 package org.softwarecave.springbootimages.images;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,41 +55,51 @@ public class ImageServiceTest {
     }
 
     @Test
-    void saveImage_savesAndPublishesMessage() throws JsonProcessingException {
-
+    void saveImage_savesAndPublishesMessage() {
+        // given
         when(imageRepository.save(sampleImage)).thenReturn(sampleImage);
 
+        // when
         imageService.saveImage(sampleImage);
 
+        // then
         verify(imageRepository).save(sampleImage);
         verify(queueSender).publishImagesSavedMessage(any());
     }
 
     @Test
     void getImage_existingId_returnsOptional() {
+        // given
         when(imageRepository.findById("abc")).thenReturn(Optional.of(sampleImage));
 
-        Optional<Image> result = imageService.getImage("abc");
+        // when
+        Image result = imageService.getImage("abc");
 
+        // then
+        assertThat(result).isNotNull().isEqualTo(sampleImage);
         verify(imageRepository).findById("abc");
-        assertThat(result).isPresent().contains(sampleImage);
     }
 
     @Test
-    void deleteImage_existingId_deletes() throws JsonProcessingException {
+    void deleteImage_existingId_deletes() {
+        // given
         when(imageRepository.findById("id1")).thenReturn(Optional.of(sampleImage));
-        doNothing().when(imageRepository).deleteById("id1");
+        doNothing().when(imageRepository).delete(sampleImage);
 
+        // when
         imageService.deleteImage("id1");
 
+        // then
         verify(imageRepository).findById("id1");
-        verify(imageRepository).deleteById("id1");
+        verify(imageRepository).delete(sampleImage);
     }
 
     @Test
     void deleteImage_nonExisting_throwsNoSuchImageException() {
+        // given
         when(imageRepository.findById("nope")).thenReturn(Optional.empty());
 
+        // when && then
         assertThrows(NoSuchImageException.class, () -> imageService.deleteImage("nope"));
 
         verify(imageRepository).findById("nope");
@@ -98,17 +107,19 @@ public class ImageServiceTest {
     }
 
     @Test
-    void generateAndSaveImageByDescription_generatesSavesAndReturnsImage() throws JsonProcessingException {
+    void generateAndSaveImageByDescription_generatesSavesAndReturnsImage() {
+        // given
         GenerateImageParams request = new GenerateImageParams("desc", 800L, 600L);
         when(imageGenerationService.generateImage(request)).thenReturn(sampleImage);
+        when(imageRepository.save(sampleImage)).thenAnswer(a -> a.getArgument(0));
 
+        //when
         Image result = imageService.generateAndSaveImage(request);
 
+        // then
         assertThat(result).isSameAs(sampleImage);
         verify(imageGenerationService).generateImage(request);
         verify(imageRepository).save(sampleImage);
         verify(queueSender).publishImagesSavedMessage(any());
-
     }
 }
-

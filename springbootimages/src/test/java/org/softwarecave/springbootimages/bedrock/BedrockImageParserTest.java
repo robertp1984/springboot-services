@@ -1,9 +1,9 @@
 package org.softwarecave.springbootimages.bedrock;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.softwarecave.springbootimages.images.model.Image;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.nio.charset.StandardCharsets;
 
@@ -18,8 +18,8 @@ public class BedrockImageParserTest {
 
     @BeforeEach
     public void setUp() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        parser = new BedrockImageParser(objectMapper);
+        JsonMapper jsonMapper = new JsonMapper();
+        parser = new BedrockImageParser(jsonMapper);
     }
 
     @Test
@@ -39,16 +39,16 @@ public class BedrockImageParserTest {
     void parseResponse_throwsImageGenerationException_whenResponseJsonIsLiteralNull() {
 
         byte[] nullJson = "null".getBytes(StandardCharsets.UTF_8);
-        assertThrows(org.softwarecave.springbootimages.bedrock.ImageGenerationException.class, () -> parser.parseResponse("desc", nullJson));
+        assertThrows(ImageGenerationException.class, () -> parser.parseResponse("desc", nullJson));
     }
 
     @Test
     void parseResponse_throwsImageGenerationException_whenImagesArrayIsEmpty() {
 
         String json = """
-                {"images":[]}"
+                {"images":[]}
                 """;
-        assertThrows(org.softwarecave.springbootimages.bedrock.ImageGenerationException.class, () ->
+        assertThrows(ImageGenerationException.class, () ->
                 parser.parseResponse("desc", json.getBytes(StandardCharsets.UTF_8)));
     }
 
@@ -56,7 +56,7 @@ public class BedrockImageParserTest {
     void parseResponse_truncatesOriginalFilename_whenDescriptionExceedsMaxLength() throws Exception {
 
         String json = """
-                {"images":["SGVsbG8="]}"
+                {"images":["SGVsbG8="]}
                 """;
         String longDescription = "a".repeat(200);
         Image image = parser.parseResponse(longDescription, json.getBytes(StandardCharsets.UTF_8));

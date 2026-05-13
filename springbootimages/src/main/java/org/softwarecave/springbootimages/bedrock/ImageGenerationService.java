@@ -1,37 +1,34 @@
 package org.softwarecave.springbootimages.bedrock;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.softwarecave.springbootimages.images.model.Image;
 import org.softwarecave.springbootimages.images.service.GenerateImageParams;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
-import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.Optional;
+import java.util.random.RandomGenerator;
 
 @Service
-@Transactional
 @Slf4j
+@RequiredArgsConstructor
 public class ImageGenerationService {
 
+    public static final long DEFAULT_WIDTH = 1024L;
+    public static final long DEFAULT_HEIGHT = 768L;
+    public static final double CONFIG_SCALE = 6.5;
     private final String IMAGE_GEN_MODEL = "amazon.nova-canvas-v1:0";
 
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
+    private final BedrockImageParser bedrockImageParser;
 
-    public ImageGenerationService(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
-
-    public Image generateImage(@NonNull GenerateImageParams params) {
+    public Image generateImage(GenerateImageParams params) {
         try (BedrockRuntimeClient client = createClient()) {
 
             String jsonRequest = createRequest(params);
@@ -40,29 +37,28 @@ public class ImageGenerationService {
                     .modelId(IMAGE_GEN_MODEL)
                     .accept(BedrockImageParser.IMAGE_MEDIA_TYPE));
 
-            return new BedrockImageParser(objectMapper).parseResponse(params.getDescription(), response.body().asByteArray());
+            return bedrockImageParser.parseResponse(params.getDescription(), response.body().asByteArray());
         } catch (Exception e) {
-            log.error("Failed to generate image {} ", e.getMessage(), e);
+            log.error("Failed to generate image with description {}", params.getDescription(), e);
             throw new ImageGenerationException("Could not generate image with description=%s".formatted(params.getDescription()), e);
         }
     }
 
+    private String createRequest(GenerateImageParams request) {
+        var seed = RandomGenerator.getDefault().nextInt(100);
 
-    private String createRequest(GenerateImageParams request) throws JsonProcessingException {
-        var seed = new BigInteger(31, new SecureRandom());
-
-        ObjectNode rootNode = objectMapper.createObjectNode();
+        ObjectNode rootNode = jsonMapper.createObjectNode();
         rootNode.put("taskType", "TEXT_IMAGE");
         rootNode.putObject("textToImageParams")
                 .put("text", request.getDescription());
         rootNode.putObject("imageGenerationConfig")
-                .put("width", Optional.ofNullable(request.getWidth()).orElse(1024L))
-                .put("height", Optional.ofNullable(request.getHeight()).orElse(768L))
+                .put("width", Optional.ofNullable(request.getWidth()).orElse(DEFAULT_WIDTH))
+                .put("height", Optional.ofNullable(request.getHeight()).orElse(DEFAULT_HEIGHT))
                 .put("quality", "standard")
-                .put("cfgScale", 6.5)
+                .put("cfgScale", CONFIG_SCALE)
                 .put("seed", seed);
 
-        return objectMapper.writeValueAsString(rootNode);
+        return jsonMapper.writeValueAsString(rootNode);
     }
 
     private BedrockRuntimeClient createClient() {

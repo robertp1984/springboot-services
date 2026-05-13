@@ -1,27 +1,35 @@
 package org.softwarecave.springbootimages.bedrock;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.softwarecave.springbootimages.images.model.Image;
 import org.softwarecave.springbootimages.images.model.ImageBuilder;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 
-import java.io.IOException;
-
+@Service
 @Slf4j
+@RequiredArgsConstructor
 public class BedrockImageParser {
 
-    final static String IMAGE_MEDIA_TYPE = MediaType.IMAGE_PNG_VALUE;
+    static final String IMAGE_MEDIA_TYPE = MediaType.IMAGE_PNG_VALUE;
     private final static int MAX_FILENAME_LENGTH = 128;
 
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
 
-    public BedrockImageParser(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
+    public Image parseResponse(String description, byte[] responseBodyBytes) {
+        if (responseBodyBytes == null) {
+            throw new ImageGenerationException("Failed to generate image due to null response");
+        }
 
-    public Image parseResponse(String description, byte[] responseBodyBytes) throws IOException {
-        BedrockImageBodyResponse responseObject = objectMapper.readValue(responseBodyBytes, BedrockImageBodyResponse.class);
+        BedrockImageBodyResponse responseObject;
+        try {
+            responseObject = jsonMapper.readValue(responseBodyBytes, BedrockImageBodyResponse.class);
+        } catch (JacksonException e) {
+            throw new ImageGenerationException("Failed to generate image due to issue with parsing response body", e);
+        }
 
         if (responseObject != null && responseObject.error() == null && responseObject.hasImage()) {
             return new ImageBuilder()
@@ -39,24 +47,20 @@ public class BedrockImageParser {
             } else {
                 log.error("Response from image generator contains no image");
             }
-            throw new ImageGenerationException("Failed to generate image. No image present", null);
+            throw new ImageGenerationException("Failed to generate image. No image present");
         }
     }
 
     private String createShortFilename(String description) {
         String extension = getShortFilenameExtension();
         String baseName = description
-                .replace(" ", "_")
+                .replaceAll("[^a-zA-Z0-9._-]", "_")
                 .substring(0, Math.min(MAX_FILENAME_LENGTH - extension.length() - 1, description.length()));
         return baseName + "." + extension;
     }
 
     private String getShortFilenameExtension() {
-        if (IMAGE_MEDIA_TYPE.equals(MediaType.IMAGE_PNG_VALUE)) {
-            return "png";
-        } else {
-            throw new IllegalArgumentException("Unsupported image media type " + IMAGE_MEDIA_TYPE);
-        }
+        return "png";
     }
 
 }

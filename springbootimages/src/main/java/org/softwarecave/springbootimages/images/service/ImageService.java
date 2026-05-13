@@ -1,55 +1,53 @@
 package org.softwarecave.springbootimages.images.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.softwarecave.springbootimages.bedrock.ImageGenerationService;
 import org.softwarecave.springbootimages.images.model.Image;
+import org.softwarecave.springbootimages.images.model.ImageValidationException;
 import org.softwarecave.springbootimages.images.model.NoSuchImageException;
 import org.softwarecave.springbootimages.messaging.ImageMessageFactory;
 import org.softwarecave.springbootimages.messaging.QueueSender;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
 @Service
 @Transactional
-@Scope("singleton")
+@RequiredArgsConstructor
 public class ImageService {
     private final ImageRepository imageRepository;
     private final QueueSender queueSender;
     private final ImageGenerationService imageGenerationService;
 
-    public ImageService(ImageRepository imageRepository, QueueSender queueSender,
-                        ImageGenerationService imageGenerationService) {
-        this.imageRepository = imageRepository;
-        this.queueSender = queueSender;
-        this.imageGenerationService = imageGenerationService;
-    }
-
-    public void saveImage(@NonNull Image image) throws JsonProcessingException {
-        imageRepository.save(image);
-        queueSender.publishImagesSavedMessage(ImageMessageFactory.createImageMessage(image));
-    }
-
-    public Optional<Image> getImage(@NonNull String id) {
-        return imageRepository.findById(id);
-    }
-
-    public void deleteImage(@NonNull String id) throws JsonProcessingException {
-        Optional<Image> image = imageRepository.findById(id);
-        if (image.isPresent()) {
-            imageRepository.deleteById(id);
-            queueSender.publishImagesDeletedMessage(ImageMessageFactory.createImageMessage(image.get()));
-        } else {
-            throw new NoSuchImageException("Image with id: " + id + " does not exist");
+    public Image saveImage(Image image) {
+        if (image == null) {
+            throw new ImageValidationException("Image must not be null");
         }
+        Image savedImage = imageRepository.save(image);
+        queueSender.publishImagesSavedMessage(ImageMessageFactory.createImageMessage(savedImage));
+        return savedImage;
     }
 
-    public Image generateAndSaveImage(@NonNull GenerateImageParams params) throws JsonProcessingException {
-        Image image = imageGenerationService.generateImage(params);
-        saveImage(image);
-        return image;
+    @Transactional(readOnly = true)
+    public Image getImage(String id) {
+        return imageRepository.findById(id)
+                .orElseThrow(() -> new NoSuchImageException("Image with id %s does not exist".formatted(id)));
     }
+
+    public void deleteImage(String id) {
+        if (id == null) {
+            throw new ImageValidationException("Id of the image must not be null");
+        }
+
+        Image image = imageRepository.findById(id)
+                .orElseThrow(() -> new NoSuchImageException("Image with id %s does not exist".formatted(id)));
+        imageRepository.delete(image);
+        queueSender.publishImagesDeletedMessage(ImageMessageFactory.createImageMessage(image));
+    }
+
+    public Image generateAndSaveImage(GenerateImageParams params) {
+        GenerateImageParamsValidator.validate(params);
+        Image generatedImage = imageGenerationService.generateImage(params);
+        return saveImage(generatedImage);
+    }
+
 }

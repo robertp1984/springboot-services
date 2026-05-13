@@ -2,10 +2,12 @@ package org.softwarecave.springbootimages.images.web.converter;
 
 import org.softwarecave.springbootimages.images.model.Image;
 import org.softwarecave.springbootimages.images.web.ImageDTO;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ImageDTOConverter {
 
-    public static ImageDTO convertToDTO(Image image){
+    public ImageDTO convertToDTO(Image image) {
         if (image == null) {
             return null;
         }
@@ -20,7 +22,7 @@ public class ImageDTOConverter {
         );
     }
 
-    public static Image convertToImage(ImageDTO imageDTO){
+    public Image convertToImage(ImageDTO imageDTO) {
         if (imageDTO == null) {
             return null;
         }

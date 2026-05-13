@@ -98,8 +98,8 @@ services:
       - mongo
       - rabbitmq
     environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://root:password@mongo:27017/?tls=true
-      - SPRING_DATA_MONGODB_DATABASE=images
+      - SPRING_MONGODB_URI=mongodb://root:password@mongo:27017/?tls=true
+      - SPRING_MONGODB_DATABASE=images
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_USERNAME=myuser
       - SPRING_RABBITMQ_PASSWORD=secret
@@ -121,8 +121,8 @@ services:
       - mongo
       - rabbitmq
     environment:
-      - APP_MONGODB_URI=mongodb://root:password@mongo:27017/?tls=true
-      - APP_MONGODB_DATABASE=mqevents
+      - SPRING_MONGODB_URI=mongodb://root:password@mongo:27017/?tls=true
+      - SPRING_MONGODB_DATABASE=mqevents
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_USERNAME=myuser
       - SPRING_RABBITMQ_PASSWORD=secret
